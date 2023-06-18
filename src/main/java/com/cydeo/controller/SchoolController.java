@@ -9,9 +9,7 @@ import com.cydeo.service.StudentService;
 import com.cydeo.service.TeacherService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -97,5 +95,11 @@ public class SchoolController {
         Create an endpoint to update individual address information.
         return updated address directly.
      */
+    @PutMapping("address/{id}")
+    public AddressDTO updateAddress(@PathVariable("id") Long id, @RequestBody AddressDTO addressDTO) throws Exception{
+        addressDTO.setId(id);
+        AddressDTO updatedAddress = addressService.update(addressDTO);
+        return updatedAddress;
+    }
 
 }
