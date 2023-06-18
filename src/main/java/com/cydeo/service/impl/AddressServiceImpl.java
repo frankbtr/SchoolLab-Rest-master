@@ -58,6 +58,12 @@ public class AddressServiceImpl implements AddressService {
         return countryApiClient.getCountryInfo(country).get(0).getFlags().getPng();
     }
 
+    private void validateCountry(String country){
+        // check if country contains inside the enum
+        // if not throw
+        //throw CountryNotFoundException("The country " + country + "not found!");
+    }
+
     private Integer retrieveTemperatureByCity(String city) {
         return weatherApiClient.getCurrentWeather(accessKey, city).getCurrent().getTemperature();
     }
