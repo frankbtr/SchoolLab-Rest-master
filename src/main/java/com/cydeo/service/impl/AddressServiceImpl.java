@@ -1,10 +1,13 @@
 package com.cydeo.service.impl;
 
+import com.cydeo.client.CountryApiClient;
+import com.cydeo.client.WeatherApiClient;
 import com.cydeo.dto.AddressDTO;
 import com.cydeo.entity.Address;
 import com.cydeo.util.MapperUtil;
 import com.cydeo.repository.AddressRepository;
 import com.cydeo.service.AddressService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,12 +17,18 @@ import java.util.stream.Collectors;
 @Service
 public class AddressServiceImpl implements AddressService {
 
+    @Value("${access_key}")
+    private String accessKey;
     private final AddressRepository addressRepository;
     private final MapperUtil mapperUtil;
+    private final WeatherApiClient weatherApiClient;
+    private final CountryApiClient countryApiClient;
 
-    public AddressServiceImpl(AddressRepository addressRepository, MapperUtil mapperUtil) {
+    public AddressServiceImpl(AddressRepository addressRepository, MapperUtil mapperUtil, WeatherApiClient weatherApiClient, CountryApiClient countryApiClient) {
         this.addressRepository = addressRepository;
         this.mapperUtil = mapperUtil;
+        this.weatherApiClient = weatherApiClient;
+        this.countryApiClient = countryApiClient;
     }
 
     @Override
@@ -34,7 +43,29 @@ public class AddressServiceImpl implements AddressService {
     public AddressDTO findById(Long id) throws Exception {
         Address foundAddress = addressRepository.findById(id)
                 .orElseThrow(() -> new Exception("No Address Found!"));
-        return mapperUtil.convert(foundAddress, new AddressDTO());
+        AddressDTO addressDTO = mapperUtil.convert(foundAddress, new AddressDTO());
+
+        // we will get the current temperature and set based on the city, then return dto
+        addressDTO.setCurrentTemperature(retrieveTemperatureByCity(addressDTO.getCity()));
+
+        // we will get the flag link based on the country provided the return the dto
+        addressDTO.setFlag(retrieveFlagByCountry(addressDTO.getCountry()));
+
+        return addressDTO;
+    }
+
+    private String retrieveFlagByCountry(String country) {
+        return countryApiClient.getCountryInfo(country).get(0).getFlags().getPng();
+    }
+
+    private void validateCountry(String country){
+        // check if country contains inside the enum
+        // if not throw
+        //throw CountryNotFoundException("The country " + country + "not found!");
+    }
+
+    private Integer retrieveTemperatureByCity(String city) {
+        return weatherApiClient.getCurrentWeather(accessKey, city).getCurrent().getTemperature();
     }
 
     @Override
